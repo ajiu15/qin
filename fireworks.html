@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>烟花绽放人像</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: black;
+    }
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    #portrait {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: auto;
+      border-radius: 10px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="fireworks"></canvas>
+  <img id="portrait" src="portrait.jpg" alt="人像照片">
+
+  <script>
+    const canvas = document.getElementById("fireworks");
+    const ctx = canvas.getContext("2d");
+    const portrait = document.getElementById("portrait");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles = [];
+    let fireworksActive = true;
+    const maxParticles = 500; // 最大粒子数量
+
+    // 创建烟花粒子
+    function createParticle(x, y, color) {
+      for (let i = 0; i < 30; i++) { // 每次创建多个粒子
+        particles.push({
+          x,
+          y,
+          angle: Math.random() * Math.PI * 2,
+          speed: Math.random() * 3 + 1,
+          radius: Math.random() * 2 + 1,
+          color,
+          life: 100,
+        });
+      }
+    }
+
+    function updateParticles() {
+      particles.forEach((p, i) => {
+        p.x += Math.cos(p.angle) * p.speed;
+        p.y += Math.sin(p.angle) * p.speed;
+        p.life -= 1;
+        if (p.life <= 0) particles.splice(i, 1);
+      });
+    }
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      });
+    }
+
+    // 绘制图片轮廓
+    function drawPortraitOutline() {
+      ctx.globalCompositeOperation = 'destination-in';
+      const img = new Image();
+      img.src = "portrait.jpg";
+      img.onload = function() {
+        ctx.drawImage(
+          img,
+          (canvas.width - img.width) / 2,
+          (canvas.height - img.height) / 2
+        );
+      };
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function loop() {
+      if (fireworksActive) {
+        drawParticles();
+        updateParticles();
+        drawPortraitOutline();
+        if (particles.length > maxParticles) {
+          fireworksActive = false;
+          portrait.style.display = "block"; // 显示人像
+        }
+        requestAnimationFrame(loop);
+      }
+    }
+
+    // 点击触发烟花效果
+    canvas.addEventListener("click", (e) => {
+      const colors = ["red", "yellow", "blue", "green", "purple"];
+      createParticle(e.clientX, e.clientY, colors[Math.floor(Math.random() * colors.length)]);
+    });
+
+    loop();
+  </script>
+</body>
+</html>
